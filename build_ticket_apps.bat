@@ -1,3 +1,5 @@
+go get github.com/gonutz/wui
+if errorlevel 1 pause
 set GOARCH=386
 go build -ldflags="-s -w" -o "Create new Ticket.exe" new_ticket.go
 if errorlevel 1 pause
