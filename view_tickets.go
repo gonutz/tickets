@@ -210,6 +210,9 @@ func main() {
 		scroll(9)
 	})
 	window.SetShortcut(wui.ShortcutKeys{Key: w32.VK_ESCAPE}, window.Close)
+	window.SetOnShow(func() {
+		searchText.Focus()
+	})
 	window.Show()
 }
 
