@@ -33,6 +33,7 @@ func main() {
 	title.SetFont(bold)
 	window.Add(title)
 	desc := wui.NewTextEdit()
+	desc.SetWordWrap(true)
 	desc.SetBounds(10, 50, 580, 500)
 	desc.SetText("Description\r\n...")
 	window.Add(desc)
