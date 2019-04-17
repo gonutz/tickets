@@ -52,7 +52,6 @@ func main() {
 		n, err := strconv.Atoi(string(data))
 		if err != nil {
 			wui.MessageBoxError(
-				window,
 				"Error",
 				"Invalid number in next ticket number file: "+err.Error(),
 			)
@@ -67,7 +66,6 @@ func main() {
 		)
 		if err != nil {
 			wui.MessageBoxError(
-				window,
 				"Error",
 				"Unable to write new ticket file: "+err.Error(),
 			)
@@ -76,7 +74,6 @@ func main() {
 		err = ioutil.WriteFile(nextNumPath, []byte(strconv.Itoa(n+1)), 0777)
 		if err != nil {
 			wui.MessageBoxError(
-				window,
 				"Error",
 				"Unable to update next ticket file: "+err.Error(),
 			)
