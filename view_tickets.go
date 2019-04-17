@@ -3,20 +3,64 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"unicode"
 
-	"fmt"
 	"github.com/gonutz/w32"
 	"github.com/gonutz/wui"
 )
 
+type appSettings struct {
+	MonitorX, MonitorY  int
+	X, Y, Width, Height int
+}
+
 func main() {
+	var settings appSettings
+	settingsPath := filepath.Join(os.Getenv("APPDATA"), "view_tickets.set")
+	if data, err := ioutil.ReadFile(settingsPath); err == nil {
+		json.Unmarshal(data, &settings)
+	}
+	defer func() {
+		data, err := json.Marshal(&settings)
+		if err == nil {
+			ioutil.WriteFile(settingsPath, data, 0666)
+		}
+	}()
+	// The settings store the last top-left corner of the monitor which the
+	// window was previously on. On the next program start this monitor might be
+	// unplugged. Since we do not want to show the window on a non-existing
+	// monitor (this would put the window off-screen) we check if there
+	// currently is a monitor that has the same top-left corner and put our
+	// window on it.
+	var monitors []w32.HMONITOR
+	cb := syscall.NewCallback(func(m w32.HMONITOR, hdc w32.HDC, r *w32.RECT, l w32.LPARAM) uintptr {
+		monitors = append(monitors, m)
+		return 1
+	})
+	w32.EnumDisplayMonitors(0, nil, cb, 0)
+	var found bool
+	for _, monitor := range monitors {
+		var info w32.MONITORINFO
+		if w32.GetMonitorInfo(monitor, &info) &&
+			int(info.RcWork.Left) == settings.MonitorX &&
+			int(info.RcWork.Top) == settings.MonitorY {
+			found = true
+		}
+	}
+	if !found {
+		// if the last monitor is not available anymore, display top-left
+		settings.X, settings.Y = 0, 0
+	}
+
 	font, _ := wui.NewFont(wui.FontDesc{
 		Name:   "Tahoma",
 		Height: -13,
@@ -28,8 +72,9 @@ func main() {
 	})
 	window := wui.NewWindow()
 	window.SetFont(font)
-	window.SetClientSize(700, 500)
 	window.SetTitle("Tickets")
+	window.SetClientSize(700, 500)
+	window.SetBounds(settings.X, settings.Y, settings.Width, settings.Height)
 	scrollPos := 0
 	scroll := func(delta float64) {
 		d := round(delta * 50)
@@ -44,7 +89,7 @@ func main() {
 	files, err := ioutil.ReadDir(".")
 	sort.Sort(byNumber(files))
 	if err != nil {
-		wui.MessageBoxError(window, "Error", "Unable to read ticket directory: "+err.Error())
+		wui.MessageBoxError("Error", "Unable to read ticket directory: "+err.Error())
 	}
 
 	type ticket struct {
@@ -102,7 +147,6 @@ func main() {
 			output, err := exec.Command("cmd", "/C", "start", ticket.path).CombinedOutput()
 			if err != nil {
 				wui.MessageBoxError(
-					window,
 					"Error",
 					winLines("Unable to open ticket file: "+err.Error()+"\n"+string(output)),
 				)
@@ -123,14 +167,12 @@ func main() {
 		window.Add(x)
 		x.SetOnClick(func() {
 			if !wui.MessageBoxYesNo(
-				window,
 				"Delete Ticket?",
 				"Really delete ticket "+ticket.number+"?") {
 				return
 			}
 			if err := os.Remove(ticket.path); err != nil {
 				wui.MessageBoxError(
-					window,
 					"Error",
 					winLines("Unable to delete ticket: "+err.Error()),
 				)
@@ -174,9 +216,6 @@ func main() {
 				}
 				return -1
 			}, ticket.content)
-			if ticket.number == "250" {
-				fmt.Println(text)
-			}
 			found := false
 			for _, word := range words {
 				if strings.Contains(text, word) {
@@ -212,6 +251,17 @@ func main() {
 	window.SetShortcut(wui.ShortcutKeys{Key: w32.VK_ESCAPE}, window.Close)
 	window.SetOnShow(func() {
 		searchText.Focus()
+	})
+	window.SetOnClose(func() {
+		settings.X, settings.Y, settings.Width, settings.Height = window.Bounds()
+		monitor := window.Monitor()
+		if monitor != 0 {
+			var info w32.MONITORINFO
+			if w32.GetMonitorInfo(monitor, &info) {
+				settings.MonitorX = int(info.RcWork.Left)
+				settings.MonitorY = int(info.RcWork.Top)
+			}
+		}
 	})
 	window.Show()
 }
