@@ -254,7 +254,7 @@ func main() {
 	})
 	window.SetOnClose(func() {
 		settings.X, settings.Y, settings.Width, settings.Height = window.Bounds()
-		monitor := window.Monitor()
+		monitor := w32.HMONITOR(window.Monitor())
 		if monitor != 0 {
 			var info w32.MONITORINFO
 			if w32.GetMonitorInfo(monitor, &info) {
