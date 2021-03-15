@@ -1,5 +1,3 @@
-//+build ignore
-
 package main
 
 import (
@@ -14,7 +12,7 @@ import (
 	"syscall"
 	"unicode"
 
-	"github.com/gonutz/w32"
+	"github.com/gonutz/w32/v2"
 	"github.com/gonutz/wui/v2"
 )
 
