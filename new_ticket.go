@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gonutz/wui"
+	"github.com/gonutz/wui/v2"
 )
 
 func main() {
@@ -23,10 +23,13 @@ func main() {
 		Height: -13,
 		Bold:   true,
 	})
-	window := wui.NewDialogWindow()
+	window := wui.NewWindow()
+	window.SetHasMinButton(false)
+	window.SetHasMaxButton(false)
+	window.SetResizable(false)
 	window.SetFont(font)
 	window.SetTitle("Create new Ticket")
-	window.SetClientSize(600, 600)
+	window.SetInnerSize(600, 600)
 	title := wui.NewEditLine()
 	title.SetText("Title")
 	title.SetBounds(10, 10, 580, 25)

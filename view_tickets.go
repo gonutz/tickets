@@ -15,7 +15,7 @@ import (
 	"unicode"
 
 	"github.com/gonutz/w32"
-	"github.com/gonutz/wui"
+	"github.com/gonutz/wui/v2"
 )
 
 type appSettings struct {
@@ -73,7 +73,7 @@ func main() {
 	window := wui.NewWindow()
 	window.SetFont(font)
 	window.SetTitle("Tickets")
-	window.SetClientSize(700, 500)
+	window.SetInnerSize(700, 500)
 	window.SetBounds(settings.X, settings.Y, settings.Width, settings.Height)
 	scrollPos := 0
 	scroll := func(delta float64) {
@@ -231,27 +231,17 @@ func main() {
 		}
 	})
 
-	window.SetShortcut(wui.ShortcutKeys{Key: w32.VK_RETURN}, func() {
+	window.SetShortcut(func() {
 		if searchText.HasFocus() {
 			search.OnClick()()
 		}
-	})
-	window.SetShortcut(wui.ShortcutKeys{Key: w32.VK_DOWN}, func() {
-		scroll(-0.25)
-	})
-	window.SetShortcut(wui.ShortcutKeys{Key: w32.VK_UP}, func() {
-		scroll(0.25)
-	})
-	window.SetShortcut(wui.ShortcutKeys{Key: w32.VK_NEXT}, func() {
-		scroll(-9)
-	})
-	window.SetShortcut(wui.ShortcutKeys{Key: w32.VK_PRIOR}, func() {
-		scroll(9)
-	})
-	window.SetShortcut(wui.ShortcutKeys{Key: w32.VK_ESCAPE}, window.Close)
-	window.SetOnShow(func() {
-		searchText.Focus()
-	})
+	}, wui.KeyReturn)
+	window.SetShortcut(func() { scroll(-0.25) }, wui.KeyDown)
+	window.SetShortcut(func() { scroll(0.25) }, wui.KeyUp)
+	window.SetShortcut(func() { scroll(-9) }, wui.KeyNext)
+	window.SetShortcut(func() { scroll(9) }, wui.KeyPrior)
+	window.SetShortcut(window.Close, wui.KeyEscape)
+	window.SetOnShow(searchText.Focus)
 	window.SetOnClose(func() {
 		settings.X, settings.Y, settings.Width, settings.Height = window.Bounds()
 		monitor := w32.HMONITOR(window.Monitor())
