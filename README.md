@@ -15,6 +15,6 @@ In order to build the tools you need to have [Go](https://golang.org/) installed
 
 Go into your project's root folder and run
 
-    git clone https://github.com/gonutz/tickets && cd tickets && call build_ticket_apps.bat && (for /F %f in ('git ls-tree -r master --name-only') do del "%f") && rmdir /S /Q .git && cd ..
+    git clone git@github.com:gonutz/tickets.git && cd tickets && call build_ticket_apps.bat && (for /F %f in ('git ls-tree -r main --name-only') do del "%f") && rmdir /S /Q .git && cd ..
 
 from the command line. This will create a new folder `tickets` and build the GUI apps in it.
